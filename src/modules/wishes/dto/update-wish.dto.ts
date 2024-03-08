@@ -1,4 +1,35 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateWishDto } from './create-wish.dto';
+import {
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsUrl,
+  Length,
+} from 'class-validator';
 
-export class UpdateWishDto extends PartialType(CreateWishDto) {}
+export class UpdateWishDto {
+  @Length(1, 250)
+  @IsOptional()
+  name?: string;
+
+  @IsUrl()
+  @IsOptional()
+  link?: string;
+
+  @IsUrl()
+  @IsOptional()
+  image?: string;
+
+  @IsNumber()
+  @IsPositive()
+  @IsOptional()
+  price?: number;
+
+  @IsNumber()
+  @IsPositive()
+  @IsOptional()
+  raised?: number;
+
+  @Length(1, 1024)
+  @IsOptional()
+  description?: string;
+}
