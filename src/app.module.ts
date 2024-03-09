@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from 'dotenv';
+import { WinstonModule } from 'nest-winston';
+import * as winston from 'winston';
+import 'winston-daily-rotate-file';
 import configuration from './configuration';
 import { Offer } from './modules/offers/entities/offer.entity';
 import { OffersModule } from './modules/offers/offers.module';
@@ -32,6 +35,19 @@ config({ path: `.env${process.env.NODE_ENV === 'dev' ? '.dev' : ''}` });
         synchronize: true,
       }),
       inject: [ConfigService],
+    }),
+    WinstonModule.forRoot({
+      transports: [
+        new winston.transports.Console({ format: winston.format.simple() }),
+        new winston.transports.DailyRotateFile({
+          filename: 'logs/error-%DATE%.log',
+          level: 'error',
+          datePattern: 'DD-MM-YYYY',
+          maxFiles: '14d',
+          zippedArchive: true,
+          format: winston.format.json(),
+        }),
+      ],
     }),
     UsersModule,
     WishesModule,
