@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   NotFoundException,
   Param,
   ParseIntPipe,
@@ -30,11 +31,13 @@ export class WishesController {
     return this.wishesService.create(createWishDto);
   }
 
+  @Header('Cache-Control', 'no-cache, max-age=86400')
   @Get()
   findAll() {
     return this.wishesService.findAll();
   }
 
+  @Header('Cache-Control', 'no-cache, max-age=86400')
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.wishesService.findOne(id);

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { config } from 'dotenv';
 import { WinstonModule } from 'nest-winston';
@@ -23,6 +24,12 @@ config({ path: `.env${process.env.NODE_ENV === 'dev' ? '.dev' : ''}` });
       load: [configuration],
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60,
+        limit: 10,
+      },
+    ]),
     TypeOrmModule.forRootAsync({
       useFactory: (configService) => ({
         type: configService.get('database.type'),
