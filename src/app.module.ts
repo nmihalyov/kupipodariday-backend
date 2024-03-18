@@ -7,6 +7,7 @@ import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
 import configuration from './configuration';
+import { AuthModule } from './modules/auth/auth.module';
 import { Offer } from './modules/offers/entities/offer.entity';
 import { OffersModule } from './modules/offers/offers.module';
 import { User } from './modules/users/entities/user.entity';
@@ -39,6 +40,7 @@ config({ path: `.env${process.env.NODE_ENV === 'dev' ? '.dev' : ''}` });
         password: configService.get('database.password'),
         database: configService.get('database.database'),
         entities: [User, Wish, Offer, Wishlist],
+        autoLoadEntities: true,
         synchronize: true,
       }),
       inject: [ConfigService],
@@ -60,6 +62,7 @@ config({ path: `.env${process.env.NODE_ENV === 'dev' ? '.dev' : ''}` });
     WishesModule,
     WishlistsModule,
     OffersModule,
+    AuthModule,
   ],
 })
 export class AppModule {}

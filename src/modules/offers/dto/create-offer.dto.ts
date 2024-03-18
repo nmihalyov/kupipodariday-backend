@@ -1,8 +1,8 @@
-import { IsBoolean, IsNumber, IsUrl } from 'class-validator';
+import { IsBoolean, IsNumber } from 'class-validator';
 
 export class CreateOfferDto {
-  @IsUrl()
-  item: string;
+  @IsNumber()
+  itemId: number;
 
   @IsNumber()
   amount: number;

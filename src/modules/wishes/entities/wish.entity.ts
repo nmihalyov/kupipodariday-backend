@@ -32,9 +32,8 @@ export class Wish extends BaseEntity {
   @Column()
   raised: number;
 
-  @Column()
-  @IsUrl()
-  owner: string;
+  @ManyToOne(() => User, (user) => user.wishes)
+  owner: User;
 
   @Column()
   @Length(1, 1024)

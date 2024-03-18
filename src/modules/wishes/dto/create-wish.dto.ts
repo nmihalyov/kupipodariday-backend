@@ -18,9 +18,6 @@ export class CreateWishDto {
   @IsPositive()
   raised: number;
 
-  @IsUrl()
-  owner: string;
-
   @Length(1, 1024)
   description: string;
 

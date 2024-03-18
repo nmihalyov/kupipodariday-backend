@@ -1,4 +1,3 @@
-import { IsUrl } from 'class-validator';
 import { Column, Entity, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
@@ -6,8 +5,7 @@ import { Wish } from '../../wishes/entities/wish.entity';
 
 @Entity()
 export class Offer extends BaseEntity {
-  @Column()
-  @IsUrl()
+  @ManyToOne(() => Wish, (wish) => wish.offers)
   item: string;
 
   @Column()
