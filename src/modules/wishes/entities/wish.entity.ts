@@ -29,7 +29,7 @@ export class Wish extends BaseEntity {
   @Column()
   price: number;
 
-  @Column()
+  @Column({ default: 0 })
   raised: number;
 
   @ManyToOne(() => User, (user) => user.wishes)
@@ -39,7 +39,7 @@ export class Wish extends BaseEntity {
   @Length(1, 1024)
   description: string;
 
-  @Column()
+  @Column({ default: 0 })
   @IsInt()
   copied: number;
 

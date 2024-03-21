@@ -22,7 +22,7 @@ export class WishlistsController {
     const wishlist = await this.wishlistsService.findOne(id);
 
     if (!wishlist) {
-      throw new NotFoundException('Wishlist not found');
+      throw new NotFoundException('Вишлист не найден');
     }
   }
 

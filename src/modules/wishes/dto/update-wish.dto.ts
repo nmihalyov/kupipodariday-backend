@@ -24,11 +24,6 @@ export class UpdateWishDto {
   @IsOptional()
   price?: number;
 
-  @IsNumber()
-  @IsPositive()
-  @IsOptional()
-  raised?: number;
-
   @Length(1, 1024)
   @IsOptional()
   description?: string;

@@ -22,7 +22,7 @@ export class OffersController {
     const offer = await this.offersService.findOne(id);
 
     if (!offer) {
-      throw new NotFoundException('Offer not found');
+      throw new NotFoundException('Предложение не найдено');
     }
   }
 

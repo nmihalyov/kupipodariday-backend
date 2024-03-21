@@ -1,4 +1,5 @@
-import { IsInt, IsNumber, IsPositive, IsUrl, Length } from 'class-validator';
+import { IsNumber, IsPositive, IsUrl, Length } from 'class-validator';
+import { User } from 'src/modules/users/entities/user.entity';
 
 export class CreateWishDto {
   @Length(1, 250)
@@ -14,13 +15,8 @@ export class CreateWishDto {
   @IsPositive()
   price: number;
 
-  @IsNumber()
-  @IsPositive()
-  raised: number;
-
   @Length(1, 1024)
   description: string;
 
-  @IsInt()
-  copied: number;
+  owner: User;
 }

@@ -25,7 +25,11 @@ export class UsersService {
   }
 
   async findByUsername(username: string): Promise<User> {
-    return this.userRepository.findOneBy({ username });
+    return this.userRepository
+      .createQueryBuilder('entity')
+      .select(['entity', 'entity.password'])
+      .where('entity.username = :username', { username })
+      .getOne();
   }
 
   async findByEmail(email: string): Promise<User> {

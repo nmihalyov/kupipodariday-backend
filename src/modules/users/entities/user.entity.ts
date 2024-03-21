@@ -23,7 +23,7 @@ export class User extends BaseEntity {
   @IsEmail()
   email: string;
 
-  @Column()
+  @Column({ select: false })
   password: string;
 
   @OneToMany(() => Wish, (wish) => wish.user)
