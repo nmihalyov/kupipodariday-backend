@@ -49,7 +49,4 @@ export class Wish extends BaseEntity {
   @ManyToMany(() => Wishlist, (wishlist) => wishlist.items)
   @JoinTable()
   wishlists: Wishlist[];
-
-  @ManyToOne(() => User, (user) => user.wishes)
-  user: number;
 }

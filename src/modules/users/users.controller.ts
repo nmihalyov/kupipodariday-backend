@@ -1,19 +1,20 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Header,
   NotFoundException,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import * as bcrypt from 'bcryptjs';
 import { JwtGuard } from 'src/guards/jwt.guard';
 import { CreateUserDto } from './dto/create-user.dto';
+import { FindUserDto } from './dto/find-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UsersService } from './users.service';
 
@@ -43,25 +44,46 @@ export class UsersController {
   }
 
   @Header('Cache-Control', 'no-cache, max-age=86400')
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.findOne(id);
+  @Get('me')
+  findCurrent(@Req() req) {
+    return this.usersService.findOne(req.user.id);
   }
 
-  @Patch(':id')
-  async update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
+  @Patch('me')
+  async updateCurrent(@Req() req, @Body() updateUserDto: UpdateUserDto) {
+    const { id } = req.user;
+    const { password } = updateUserDto;
+
     await this.checkUser(id);
+
+    if (password) {
+      updateUserDto.password = await bcrypt.hash(password, 10);
+    }
 
     return this.usersService.update(id, updateUserDto);
   }
 
-  @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    await this.checkUser(id);
+  @Header('Cache-Control', 'no-cache, max-age=86400')
+  @Get('me/wishes')
+  findCurrentWishes(@Req() req) {
+    return this.usersService.findCurrentWishes(req.user.id);
+  }
 
-    return this.usersService.remove(id);
+  @Header('Cache-Control', 'no-cache, max-age=86400')
+  @Get(':username')
+  findByUsername(@Param('username') username: string) {
+    return this.usersService.findByUsername(username);
+  }
+
+  @Header('Cache-Control', 'no-cache, max-age=86400')
+  @Get(':username/wishes')
+  findWishesByUsername(@Param('username') username: string) {
+    return this.usersService.findWishesByUsername(username);
+  }
+
+  @Header('Cache-Control', 'no-cache, max-age=86400')
+  @Post('find')
+  findByQuery(@Body() findUserDto: FindUserDto) {
+    return this.usersService.findByQuery(findUserDto.query);
   }
 }

@@ -21,13 +21,15 @@ export class WishesService {
   }
 
   async findOne(id: number): Promise<Wish> {
-    const wish = await this.wishRepository.find({
-      where: { id },
-      relations: ['owner', 'offers'],
-      take: 1,
-    });
+    const wish = (
+      await this.wishRepository.find({
+        where: { id },
+        relations: ['owner', 'offers'],
+        take: 1,
+      })
+    )[0];
 
-    return wish[0];
+    return wish;
   }
 
   async update(id: number, updateWishDto: UpdateWishDto): Promise<Wish> {

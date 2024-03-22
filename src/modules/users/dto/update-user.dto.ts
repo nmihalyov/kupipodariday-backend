@@ -12,4 +12,8 @@ export class UpdateUserDto {
   @IsUrl()
   @IsOptional()
   avatar?: string;
+
+  @Length(8)
+  @IsOptional()
+  password?: string;
 }
