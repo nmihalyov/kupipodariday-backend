@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { removeHiddenOffersOwners } from '../../common/helpers/removeHiddenOffersOwners';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UpdateWishDto } from './dto/update-wish.dto';
 import { Wish } from './entities/wish.entity';
@@ -16,58 +17,85 @@ export class WishesService {
     return this.wishRepository.save(createWishDto);
   }
 
-  async findAll(): Promise<Wish[]> {
-    return this.wishRepository.find({ relations: ['owner', 'offers'] });
+  async findAll(userId: number): Promise<Wish[]> {
+    const wishes = await this.wishRepository.find({
+      relations: ['owner', 'offers', 'offers.owner'],
+    });
+
+    removeHiddenOffersOwners(wishes, userId);
+
+    return wishes;
   }
 
-  async findOne(id: number): Promise<Wish> {
-    const wish = (
-      await this.wishRepository.find({
-        where: { id },
-        relations: ['owner', 'offers'],
-        take: 1,
-      })
-    )[0];
+  async findOne(id: number, userId: number): Promise<Wish> {
+    const wish = await this.wishRepository.findOne({
+      where: { id },
+      relations: ['owner', 'offers', 'offers.owner'],
+    });
+
+    removeHiddenOffersOwners(wish, userId);
 
     return wish;
   }
 
-  async update(id: number, updateWishDto: UpdateWishDto): Promise<Wish> {
+  async update(
+    id: number,
+    userId: number,
+    updateWishDto: UpdateWishDto,
+  ): Promise<Wish> {
     this.wishRepository.update(id, updateWishDto);
 
-    return this.findOne(id);
+    return this.findOne(id, userId);
   }
 
-  async remove(id: number): Promise<Wish> {
-    const wish = this.findOne(id);
+  async updateRaised(
+    id: number,
+    userId: number,
+    raised: number,
+  ): Promise<Wish> {
+    this.wishRepository.update(id, { raised });
+
+    return this.findOne(id, userId);
+  }
+
+  async remove(id: number, userId: number): Promise<Wish> {
+    const wish = this.findOne(id, userId);
 
     this.wishRepository.delete({ id });
 
     return wish;
   }
 
-  async findTopWishes(): Promise<Wish[]> {
-    return this.wishRepository.find({
+  async findTopWishes(userId: number): Promise<Wish[]> {
+    const wishes = await this.wishRepository.find({
       order: {
         copied: 'DESC',
       },
       take: 20,
-      relations: ['owner', 'offers'],
+      relations: ['owner', 'offers', 'offers.owner'],
     });
+
+    removeHiddenOffersOwners(wishes, userId);
+
+    return wishes;
   }
 
-  async findLastWishes(): Promise<Wish[]> {
-    return this.wishRepository.find({
+  async findLastWishes(userId: number): Promise<Wish[]> {
+    const wishes = await this.wishRepository.find({
       order: {
         createdAt: 'DESC',
       },
       take: 40,
-      relations: ['owner', 'offers'],
+      relations: ['owner', 'offers', 'offers.owner'],
     });
+
+    removeHiddenOffersOwners(wishes, userId);
+
+    return wishes;
   }
 
   async copy(id: number, user): Promise<Wish> {
-    const originalWish = await this.findOne(id);
+    const originalWish = await this.findOne(id, user.id);
     const { name, link, image, price, description } = originalWish;
 
     originalWish.copied++;
@@ -83,6 +111,10 @@ export class WishesService {
 
     this.wishRepository.save(originalWish);
 
-    return this.create(copiedWish);
+    const resultWish = await this.create(copiedWish);
+
+    removeHiddenOffersOwners(resultWish, user.id);
+
+    return resultWish;
   }
 }

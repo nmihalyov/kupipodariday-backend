@@ -17,11 +17,16 @@ export class OffersService {
   }
 
   async findAll(): Promise<Offer[]> {
-    return this.offerRepository.find();
+    return this.offerRepository.find({
+      relations: ['owner', 'wish'],
+    });
   }
 
   async findOne(id: number): Promise<Offer> {
-    return this.offerRepository.findOneBy({ id });
+    return this.offerRepository.findOne({
+      where: { id },
+      relations: ['owner', 'wish'],
+    });
   }
 
   async update(

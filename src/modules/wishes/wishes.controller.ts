@@ -22,16 +22,12 @@ import { WishesService } from './wishes.service';
 export class WishesController {
   constructor(private readonly wishesService: WishesService) {}
 
-  private async checkWish(id: number) {
-    const wish = await this.wishesService.findOne(id);
+  private async checkWishOwner(wishId: number, userId: number) {
+    const wish = await this.wishesService.findOne(wishId, userId);
 
     if (!wish) {
       throw new NotFoundException('Желание не найдено');
     }
-  }
-
-  private async checkWishOwner(wishId: number, userId: number) {
-    const wish = await this.wishesService.findOne(wishId);
 
     if (wish.owner.id !== userId) {
       throw new ForbiddenException('Доступ запрещен');
@@ -50,27 +46,29 @@ export class WishesController {
   @UseGuards(JwtGuard)
   @Header('Cache-Control', 'no-cache, max-age=86400')
   @Get()
-  findAll() {
-    return this.wishesService.findAll();
+  findAll(@Req() req) {
+    return this.wishesService.findAll(req.user.id);
   }
 
   @Header('Cache-Control', 'no-cache, max-age=86400')
   @Get('top')
-  findTopWishes() {
-    return this.wishesService.findTopWishes();
+  findTopWishes(@Req() req) {
+    return this.wishesService.findTopWishes(req.user.id);
   }
 
   @Header('Cache-Control', 'no-cache, max-age=86400')
   @Get('last')
-  findLastWishes() {
-    return this.wishesService.findLastWishes();
+  findLastWishes(@Req() req) {
+    return this.wishesService.findLastWishes(req.user.id);
   }
 
   @UseGuards(JwtGuard)
   @Header('Cache-Control', 'no-cache, max-age=86400')
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.wishesService.findOne(id);
+  findOne(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    const userId = req.user.id;
+
+    return this.wishesService.findOne(id, userId);
   }
 
   @UseGuards(JwtGuard)
@@ -80,17 +78,26 @@ export class WishesController {
     @Req() req,
     @Body() updateWishDto: UpdateWishDto,
   ) {
-    await this.checkWishOwner(id, req.user.id);
+    const userId = req.user.id;
+    const wish = await this.wishesService.findOne(id, userId);
+    await this.checkWishOwner(id, userId);
 
-    return this.wishesService.update(id, updateWishDto);
+    if (wish.offers.length && updateWishDto.price !== undefined) {
+      throw new ForbiddenException(
+        'Нельзя изменить цену, так как уже есть предложения',
+      );
+    }
+
+    return this.wishesService.update(id, userId, updateWishDto);
   }
 
   @UseGuards(JwtGuard)
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number, @Req() req) {
-    await this.checkWishOwner(id, req.user.id);
+    const userId = req.user.id;
+    await this.checkWishOwner(id, userId);
 
-    return this.wishesService.remove(id);
+    return this.wishesService.remove(id, userId);
   }
 
   @UseGuards(JwtGuard)

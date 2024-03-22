@@ -28,12 +28,15 @@ export class AuthController {
   }
 
   @Post('signup')
-  async signup(@Body() createUserDto: CreateUserDto) {
+  async signup(@Req() req, @Body() createUserDto: CreateUserDto) {
+    const { id } = req.user;
     const userByName = await this.usersService.findByUsername(
       createUserDto.username,
+      id,
     );
     const userByEmail = await this.usersService.findByEmail(
       createUserDto.email,
+      id,
     );
 
     if (userByName || userByEmail) {

@@ -5,9 +5,6 @@ import { Wish } from '../../wishes/entities/wish.entity';
 
 @Entity()
 export class Offer extends BaseEntity {
-  @ManyToOne(() => Wish, (wish) => wish.offers)
-  item: string;
-
   @Column()
   amount: number;
 
@@ -15,7 +12,7 @@ export class Offer extends BaseEntity {
   hidden: boolean;
 
   @ManyToOne(() => User, (user) => user.offers)
-  user: User;
+  owner: User;
 
   @ManyToOne(() => Wish, (wish) => wish.offers)
   wish: Wish;

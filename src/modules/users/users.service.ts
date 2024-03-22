@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, Repository } from 'typeorm';
+import { removeHiddenOffersOwners } from 'src/common/helpers/removeHiddenOffersOwners';
+import { Repository } from 'typeorm';
 import { Wish } from '../wishes/entities/wish.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -17,16 +18,28 @@ export class UsersService {
     return this.userRepository.save(createUserDto);
   }
 
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find();
+  async findAll(userId: number): Promise<User[]> {
+    const users = await this.userRepository.find();
+
+    users.forEach((user) => removeHiddenOffersOwners(user.wishes, userId));
+
+    return users;
   }
 
-  async findOne(id: number): Promise<User> {
-    return this.userRepository.findOneBy({ id });
+  async findOne(id: number, userId: number): Promise<User> {
+    const user = await this.userRepository.findOneBy({ id });
+
+    removeHiddenOffersOwners(user.wishes, userId);
+
+    return user;
   }
 
-  async findByUsername(username: string): Promise<User> {
-    return this.userRepository.findOneBy({ username });
+  async findByUsername(username: string, userId: number): Promise<User> {
+    const user = await this.userRepository.findOneBy({ username });
+
+    removeHiddenOffersOwners(user.wishes, userId);
+
+    return user;
   }
 
   async findByUsernameWithPassword(username: string): Promise<User> {
@@ -37,48 +50,53 @@ export class UsersService {
       .getOne();
   }
 
-  async findByEmail(email: string): Promise<User> {
-    return this.userRepository.findOneBy({ email });
+  async findByEmail(email: string, userId: number): Promise<User> {
+    const user = await this.userRepository.findOneBy({ email });
+
+    removeHiddenOffersOwners(user.wishes, userId);
+
+    return user;
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
     this.userRepository.update(id, updateUserDto);
 
-    return this.findOne(id);
-  }
-
-  async remove(id: number): Promise<DeleteResult> {
-    return this.userRepository.delete({ id });
+    return this.findOne(id, id);
   }
 
   async findCurrentWishes(id: number): Promise<Wish[]> {
-    const user = (
-      await this.userRepository.find({
-        where: { id },
-        relations: ['wishes', 'wishes.offers'],
-        take: 1,
-      })
-    )[0];
+    const { wishes } = await this.userRepository.findOne({
+      where: { id },
+      relations: ['wishes', 'wishes.offers'],
+    });
 
-    return user.wishes;
+    removeHiddenOffersOwners(wishes, id);
+
+    return wishes;
   }
 
-  async findWishesByUsername(username: string): Promise<Wish[]> {
-    const user = (
-      await this.userRepository.find({
-        where: { username },
-        relations: ['wishes', 'wishes.offers'],
-        take: 1,
-      })
-    )[0];
+  async findWishesByUsername(
+    username: string,
+    userId: number,
+  ): Promise<Wish[]> {
+    const { wishes } = await this.userRepository.findOne({
+      where: { username },
+      relations: ['wishes', 'wishes.offers'],
+    });
 
-    return user.wishes;
+    removeHiddenOffersOwners(wishes, userId);
+
+    return wishes;
   }
 
-  async findByQuery(query: string): Promise<User[]> {
-    return this.userRepository
+  async findByQuery(query: string, userId: number): Promise<User[]> {
+    const users = await this.userRepository
       .createQueryBuilder('user')
       .where('user.username = :query OR user.email = :query', { query })
       .getMany();
+
+    users.forEach((user) => removeHiddenOffersOwners(user.wishes, userId));
+
+    return users;
   }
 }

@@ -25,7 +25,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   private async checkUser(id: number) {
-    const user = await this.usersService.findOne(id);
+    const user = await this.usersService.findOne(id, id);
 
     if (!user) {
       throw new NotFoundException('Пользователь не найден');
@@ -39,14 +39,16 @@ export class UsersController {
 
   @Header('Cache-Control', 'no-cache, max-age=86400')
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@Req() req) {
+    return this.usersService.findAll(req.user.id);
   }
 
   @Header('Cache-Control', 'no-cache, max-age=86400')
   @Get('me')
   findCurrent(@Req() req) {
-    return this.usersService.findOne(req.user.id);
+    const { id } = req.user;
+
+    return this.usersService.findOne(id, id);
   }
 
   @Patch('me')
@@ -71,19 +73,19 @@ export class UsersController {
 
   @Header('Cache-Control', 'no-cache, max-age=86400')
   @Get(':username')
-  findByUsername(@Param('username') username: string) {
-    return this.usersService.findByUsername(username);
+  findByUsername(@Param('username') username: string, @Req() req) {
+    return this.usersService.findByUsername(username, req.user.id);
   }
 
   @Header('Cache-Control', 'no-cache, max-age=86400')
   @Get(':username/wishes')
-  findWishesByUsername(@Param('username') username: string) {
-    return this.usersService.findWishesByUsername(username);
+  findWishesByUsername(@Param('username') username: string, @Req() req) {
+    return this.usersService.findWishesByUsername(username, req.user.id);
   }
 
   @Header('Cache-Control', 'no-cache, max-age=86400')
   @Post('find')
-  findByQuery(@Body() findUserDto: FindUserDto) {
-    return this.usersService.findByQuery(findUserDto.query);
+  findByQuery(@Req() req, @Body() findUserDto: FindUserDto) {
+    return this.usersService.findByQuery(findUserDto.query, req.user.id);
   }
 }
