@@ -22,12 +22,18 @@ import { WishesService } from './wishes.service';
 export class WishesController {
   constructor(private readonly wishesService: WishesService) {}
 
-  private async checkWishOwner(wishId: number, userId: number) {
+  private async checkWish(wishId: number, userId: number) {
     const wish = await this.wishesService.findOne(wishId, userId);
 
     if (!wish) {
       throw new NotFoundException('Желание не найдено');
     }
+
+    return wish;
+  }
+
+  private async checkWishOwner(wishId: number, userId: number) {
+    const wish = await this.checkWish(wishId, userId);
 
     if (wish.owner.id !== userId) {
       throw new ForbiddenException('Доступ запрещен');
@@ -53,13 +59,13 @@ export class WishesController {
   @Header('Cache-Control', 'no-cache, max-age=86400')
   @Get('top')
   findTopWishes(@Req() req) {
-    return this.wishesService.findTopWishes(req.user.id);
+    return this.wishesService.findTopWishes(req?.user?.id);
   }
 
   @Header('Cache-Control', 'no-cache, max-age=86400')
   @Get('last')
   findLastWishes(@Req() req) {
-    return this.wishesService.findLastWishes(req.user.id);
+    return this.wishesService.findLastWishes(req?.user?.id);
   }
 
   @UseGuards(JwtGuard)
@@ -104,6 +110,7 @@ export class WishesController {
   @Post(':id/copy')
   async copyWish(@Param('id') id: number, @Req() req) {
     const user = req.user;
+    await this.checkWish(id, user.id);
 
     return this.wishesService.copy(id, user);
   }

@@ -26,14 +26,6 @@ export class OffersController {
     private readonly wishesService: WishesService,
   ) {}
 
-  private async checkOffer(id: number) {
-    const offer = await this.offersService.findOne(id);
-
-    if (!offer) {
-      throw new NotFoundException('Предложение не найдено');
-    }
-  }
-
   @Post()
   async create(@Req() req, @Body() createOfferDto: CreateOfferDto) {
     const { id } = req.user;

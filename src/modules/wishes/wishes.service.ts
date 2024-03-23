@@ -66,7 +66,7 @@ export class WishesService {
     return wish;
   }
 
-  async findTopWishes(userId: number): Promise<Wish[]> {
+  async findTopWishes(userId?: number): Promise<Wish[]> {
     const wishes = await this.wishRepository.find({
       order: {
         copied: 'DESC',
@@ -80,7 +80,7 @@ export class WishesService {
     return wishes;
   }
 
-  async findLastWishes(userId: number): Promise<Wish[]> {
+  async findLastWishes(userId?: number): Promise<Wish[]> {
     const wishes = await this.wishRepository.find({
       order: {
         createdAt: 'DESC',
