@@ -27,8 +27,8 @@ export class HideOwner implements NestInterceptor {
   }
 
   hideOwnerIfNotCurrentUser(offer, currentUser) {
-    if (offer.owner?.id !== currentUser.id && offer.hidden) {
-      delete offer.owner;
+    if (offer.user?.id !== currentUser.id && offer.hidden) {
+      delete offer.user;
     }
 
     return offer;

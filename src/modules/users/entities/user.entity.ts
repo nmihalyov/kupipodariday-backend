@@ -29,7 +29,7 @@ export class User extends BaseEntity {
   @OneToMany(() => Wish, (wish) => wish.owner)
   wishes: Wish[];
 
-  @OneToMany(() => Offer, (offer) => offer.owner)
+  @OneToMany(() => Offer, (offer) => offer.user)
   offers: Offer[];
 
   @OneToMany(() => Wishlist, (wishlist) => wishlist.owner)

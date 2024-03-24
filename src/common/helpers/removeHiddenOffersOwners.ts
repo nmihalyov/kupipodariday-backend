@@ -6,8 +6,8 @@ export const removeHiddenOffersOwners = function (
 ) {
   const handleWish = (wish: Wish) => {
     wish?.offers?.forEach((offer) => {
-      if (!userId || (offer.owner?.id !== userId && offer.hidden)) {
-        delete offer.owner;
+      if (!userId || (offer.user?.id !== userId && offer.hidden)) {
+        delete offer.user;
       }
     });
   };

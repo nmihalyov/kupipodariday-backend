@@ -54,7 +54,7 @@ export class OffersController {
       amount + wish.raised,
     );
 
-    createOfferDto.owner = req.user;
+    createOfferDto.user = req.user;
     createOfferDto.wish = updatedWish;
 
     return this.offersService.create(createOfferDto);

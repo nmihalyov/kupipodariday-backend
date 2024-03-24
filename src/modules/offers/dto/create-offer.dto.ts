@@ -12,7 +12,7 @@ export class CreateOfferDto {
   @IsBoolean()
   hidden: boolean;
 
-  owner: User;
+  user: User;
 
   wish: Wish;
 }
