@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -6,6 +6,7 @@ import { config } from 'dotenv';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
+import { CorsMiddleware } from './common/middlewares/cors.middleware';
 import configuration from './configuration';
 import { AuthModule } from './modules/auth/auth.module';
 import { Offer } from './modules/offers/entities/offer.entity';
@@ -65,4 +66,8 @@ config({ path: `.env${process.env.NODE_ENV === 'dev' ? '.dev' : ''}` });
     AuthModule,
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CorsMiddleware).forRoutes('*');
+  }
+}
