@@ -79,6 +79,7 @@ export class WishlistsController {
     const { id: userId } = req.user;
 
     createWishlistDto.owner = req.user;
+    createWishlistDto.description = createWishlistDto.description || '';
     await this.addWishesToWishlist(createWishlistDto, userId);
 
     return this.wishlistsService.create(createWishlistDto);
