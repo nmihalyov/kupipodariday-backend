@@ -115,8 +115,8 @@ export class WishlistsController {
   }
 
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    await this.checkWishlist(id);
+  async remove(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    await this.checkWishlistOwner(id, req.user.id);
 
     return this.wishlistsService.remove(id);
   }
