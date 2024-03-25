@@ -1,12 +1,4 @@
-import {
-  Body,
-  ConflictException,
-  Controller,
-  Post,
-  Req,
-  UseGuards,
-} from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { LocalGuard } from '../../guards/local.guard';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { UsersService } from '../users/users.service';
@@ -30,31 +22,11 @@ export class AuthController {
   @Post('signup')
   async signup(@Req() req, @Body() createUserDto: CreateUserDto) {
     const { id } = req.user;
-    const userByName = await this.usersService.findByUsername(
-      createUserDto.username,
-      id,
-    );
-    const userByEmail = await this.usersService.findByEmail(
-      createUserDto.email,
-      id,
-    );
-
-    if (userByName || userByEmail) {
-      throw new ConflictException(
-        'Пользователь с таким email или username уже зарегистрирован',
-      );
-    }
-
-    const hash = await bcrypt.hash(createUserDto.password, 10);
-
-    const newUser = await this.usersService.create({
-      ...createUserDto,
-      password: hash,
-    });
+    const user = await this.usersService.create(createUserDto, id);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...result } = newUser;
+    const { password, ...result } = user;
 
-    this.authService.auth(newUser);
+    this.authService.auth(user);
 
     return result;
   }

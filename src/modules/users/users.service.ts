@@ -1,5 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcryptjs';
 import { removeHiddenOffersOwners } from 'src/common/helpers/removeHiddenOffersOwners';
 import { Repository } from 'typeorm';
 import { Wish } from '../wishes/entities/wish.entity';
@@ -14,7 +19,28 @@ export class UsersService {
     private userRepository: Repository<User>,
   ) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  private async checkUser(id: number) {
+    const user = await this.findOne(id);
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+  }
+
+  async create(createUserDto: CreateUserDto, id: number): Promise<User> {
+    const userByName = await this.findByUsername(createUserDto.username, id);
+    const userByEmail = await this.findByEmail(createUserDto.email, id);
+
+    if (userByName || userByEmail) {
+      throw new ConflictException(
+        'Пользователь с таким email или username уже зарегистрирован',
+      );
+    }
+
+    const hash = await bcrypt.hash(createUserDto.password, 10);
+
+    createUserDto.password = hash;
+
     return this.userRepository.save(createUserDto);
   }
 
@@ -26,10 +52,10 @@ export class UsersService {
     return users;
   }
 
-  async findOne(id: number, userId: number): Promise<User> {
+  async findOne(id: number): Promise<User> {
     const user = await this.userRepository.findOneBy({ id });
 
-    removeHiddenOffersOwners(user.wishes, userId);
+    removeHiddenOffersOwners(user.wishes, id);
 
     return user;
   }
@@ -59,9 +85,31 @@ export class UsersService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const currentUser = await this.findOne(id);
+    const { username, email } = updateUserDto;
+    const userByName = await this.findByUsername(username, id);
+    const userByEmail = await this.findByEmail(email, id);
+
+    if (
+      (userByName && username !== currentUser.username) ||
+      (userByEmail && email !== currentUser.email)
+    ) {
+      throw new ConflictException(
+        'Пользователь с таким email или username уже зарегистрирован',
+      );
+    }
+
+    const { password } = updateUserDto;
+
+    await this.checkUser(id);
+
+    if (password) {
+      updateUserDto.password = await bcrypt.hash(password, 10);
+    }
+
     this.userRepository.update(id, updateUserDto);
 
-    return this.findOne(id, id);
+    return this.findOne(id);
   }
 
   async findCurrentWishes(id: number): Promise<Wish[]> {
