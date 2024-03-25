@@ -1,10 +1,8 @@
 import {
   Body,
   Controller,
-  ForbiddenException,
   Get,
   Header,
-  NotFoundException,
   Param,
   ParseIntPipe,
   Post,
@@ -14,50 +12,17 @@ import {
 } from '@nestjs/common';
 import { HideOwner } from 'src/common/interceptors/hideOwner.interceptor';
 import { JwtGuard } from 'src/guards/jwt.guard';
-import { WishesService } from '../wishes/wishes.service';
 import { CreateOfferDto } from './dto/create-offer.dto';
 import { OffersService } from './offers.service';
 
 @UseGuards(JwtGuard)
 @Controller('offers')
 export class OffersController {
-  constructor(
-    private readonly offersService: OffersService,
-    private readonly wishesService: WishesService,
-  ) {}
+  constructor(private readonly offersService: OffersService) {}
 
   @Post()
   async create(@Req() req, @Body() createOfferDto: CreateOfferDto) {
-    const { id } = req.user;
-    const { itemId, amount } = createOfferDto;
-    const wish = await this.wishesService.findOne(itemId, id);
-
-    if (!wish) {
-      throw new NotFoundException('Желание по указанному ID не найдено');
-    }
-
-    if (id === wish.owner.id) {
-      throw new ForbiddenException(
-        'Нельзя добавить предложение на свое желание',
-      );
-    }
-
-    if (wish.raised + amount > wish.price) {
-      throw new ForbiddenException(
-        `Нельзя добавить предложение более, чем на ${wish.price - wish.raised}₽`,
-      );
-    }
-
-    const updatedWish = await this.wishesService.updateRaised(
-      itemId,
-      id,
-      amount + wish.raised,
-    );
-
-    createOfferDto.user = req.user;
-    createOfferDto.wish = updatedWish;
-
-    return this.offersService.create(createOfferDto);
+    return this.offersService.create(createOfferDto, req.user);
   }
 
   @UseInterceptors(HideOwner)

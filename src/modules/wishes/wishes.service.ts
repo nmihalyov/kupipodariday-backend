@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { removeHiddenOffersOwners } from '../../common/helpers/removeHiddenOffersOwners';
 import { CreateWishDto } from './dto/create-wish.dto';
 import { UpdateWishDto } from './dto/update-wish.dto';
@@ -84,8 +84,9 @@ export class WishesService {
     id: number,
     userId: number,
     raised: number,
+    entityManager: EntityManager,
   ): Promise<Wish> {
-    this.wishRepository.update(id, { raised });
+    await entityManager.update(Wish, id, { raised });
 
     return this.findOne(id, userId);
   }
