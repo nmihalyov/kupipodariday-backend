@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { removeHiddenOffersOwners } from '../../common/helpers/removeHiddenOffersOwners';
@@ -12,6 +16,24 @@ export class WishesService {
     @InjectRepository(Wish)
     private wishRepository: Repository<Wish>,
   ) {}
+
+  private async checkWish(wishId: number, userId: number) {
+    const wish = await this.findOne(wishId, userId);
+
+    if (!wish) {
+      throw new NotFoundException('Желание не найдено');
+    }
+
+    return wish;
+  }
+
+  private async checkWishOwner(wishId: number, userId: number) {
+    const wish = await this.checkWish(wishId, userId);
+
+    if (wish.owner.id !== userId) {
+      throw new ForbiddenException('Доступ запрещен');
+    }
+  }
 
   async create(createWishDto: CreateWishDto): Promise<Wish> {
     return this.wishRepository.save(createWishDto);
@@ -43,9 +65,19 @@ export class WishesService {
     userId: number,
     updateWishDto: UpdateWishDto,
   ): Promise<Wish> {
+    const wish = await this.findOne(id, userId);
+
+    await this.checkWishOwner(id, userId);
+
+    if (wish.offers.length && updateWishDto.price !== undefined) {
+      throw new ForbiddenException(
+        'Нельзя изменить цену, так как уже есть предложения',
+      );
+    }
+
     this.wishRepository.update(id, updateWishDto);
 
-    return this.findOne(id, userId);
+    return { ...wish, ...updateWishDto };
   }
 
   async updateRaised(
@@ -59,6 +91,8 @@ export class WishesService {
   }
 
   async remove(id: number, userId: number): Promise<Wish> {
+    await this.checkWishOwner(id, userId);
+
     const wish = this.findOne(id, userId);
 
     this.wishRepository.delete({ id });
@@ -95,7 +129,7 @@ export class WishesService {
   }
 
   async copy(id: number, user): Promise<Wish> {
-    const originalWish = await this.findOne(id, user.id);
+    const originalWish = await this.checkWish(id, user.id);
     const { name, link, image, price, description } = originalWish;
 
     originalWish.copied++;

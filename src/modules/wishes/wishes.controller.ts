@@ -2,10 +2,8 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   Header,
-  NotFoundException,
   Param,
   ParseIntPipe,
   Patch,
@@ -21,24 +19,6 @@ import { WishesService } from './wishes.service';
 @Controller('wishes')
 export class WishesController {
   constructor(private readonly wishesService: WishesService) {}
-
-  private async checkWish(wishId: number, userId: number) {
-    const wish = await this.wishesService.findOne(wishId, userId);
-
-    if (!wish) {
-      throw new NotFoundException('Желание не найдено');
-    }
-
-    return wish;
-  }
-
-  private async checkWishOwner(wishId: number, userId: number) {
-    const wish = await this.checkWish(wishId, userId);
-
-    if (wish.owner.id !== userId) {
-      throw new ForbiddenException('Доступ запрещен');
-    }
-  }
 
   @UseGuards(JwtGuard)
   @Post()
@@ -85,14 +65,6 @@ export class WishesController {
     @Body() updateWishDto: UpdateWishDto,
   ) {
     const userId = req.user.id;
-    const wish = await this.wishesService.findOne(id, userId);
-    await this.checkWishOwner(id, userId);
-
-    if (wish.offers.length && updateWishDto.price !== undefined) {
-      throw new ForbiddenException(
-        'Нельзя изменить цену, так как уже есть предложения',
-      );
-    }
 
     return this.wishesService.update(id, userId, updateWishDto);
   }
@@ -101,7 +73,6 @@ export class WishesController {
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number, @Req() req) {
     const userId = req.user.id;
-    await this.checkWishOwner(id, userId);
 
     return this.wishesService.remove(id, userId);
   }
@@ -109,8 +80,7 @@ export class WishesController {
   @UseGuards(JwtGuard)
   @Post(':id/copy')
   async copyWish(@Param('id') id: number, @Req() req) {
-    const user = req.user;
-    await this.checkWish(id, user.id);
+    const { user } = req;
 
     return this.wishesService.copy(id, user);
   }
