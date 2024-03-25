@@ -18,14 +18,14 @@ export class OffersService {
 
   async findAll(): Promise<Offer[]> {
     return this.offerRepository.find({
-      relations: ['owner', 'wish'],
+      relations: ['user', 'wish'],
     });
   }
 
   async findOne(id: number): Promise<Offer> {
     return this.offerRepository.findOne({
       where: { id },
-      relations: ['owner', 'wish'],
+      relations: ['user', 'wish'],
     });
   }
 

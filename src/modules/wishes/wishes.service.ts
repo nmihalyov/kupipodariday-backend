@@ -19,7 +19,7 @@ export class WishesService {
 
   async findAll(userId: number): Promise<Wish[]> {
     const wishes = await this.wishRepository.find({
-      relations: ['owner', 'offers', 'offers.owner'],
+      relations: ['owner', 'offers', 'offers.user'],
     });
 
     removeHiddenOffersOwners(wishes, userId);
@@ -30,7 +30,7 @@ export class WishesService {
   async findOne(id: number, userId: number): Promise<Wish> {
     const wish = await this.wishRepository.findOne({
       where: { id },
-      relations: ['owner', 'offers', 'offers.owner'],
+      relations: ['owner', 'offers', 'offers.user'],
     });
 
     removeHiddenOffersOwners(wish, userId);
@@ -72,7 +72,7 @@ export class WishesService {
         copied: 'DESC',
       },
       take: 20,
-      relations: ['owner', 'offers', 'offers.owner'],
+      relations: ['owner', 'offers', 'offers.user'],
     });
 
     removeHiddenOffersOwners(wishes, userId);
@@ -86,7 +86,7 @@ export class WishesService {
         createdAt: 'DESC',
       },
       take: 40,
-      relations: ['owner', 'offers', 'offers.owner'],
+      relations: ['owner', 'offers', 'offers.user'],
     });
 
     removeHiddenOffersOwners(wishes, userId);
